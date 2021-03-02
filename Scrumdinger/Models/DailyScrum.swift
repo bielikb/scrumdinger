@@ -3,7 +3,7 @@ See LICENSE folder for this sample’s licensing information.
 */
 import SwiftUI
 
-struct DailyScrum: Identifiable, Codable {
+struct DailyScrum: Identifiable, Codable, Equatable {
     let id: UUID
     var title: String
     var attendees: [String]
@@ -32,7 +32,7 @@ extension DailyScrum {
 }
 
 extension DailyScrum {
-    struct Data {
+    struct Data: Equatable {
         var title: String = ""
         var attendees: [String] = []
         var lengthInMinutes: Double = 5.0

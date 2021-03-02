@@ -4,7 +4,7 @@ See LICENSE folder for this sample’s licensing information.
 
 import Foundation
 
-struct History: Identifiable, Codable {
+struct History: Identifiable, Codable, Equatable {
     let id: UUID
     let date: Date
     var attendees: [String]
