@@ -3,10 +3,11 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2115459125E11AF000A28D17 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 2115459025E11AF000A28D17 /* ComposableArchitecture */; };
 		AA13BBBF24F567AA005EB048 /* EditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA13BBBE24F567AA005EB048 /* EditView.swift */; };
 		AA13BBC124F56EA9005EB048 /* ScrumProgressViewStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA13BBC024F56EA9005EB048 /* ScrumProgressViewStyle.swift */; };
 		AA13BBC324F56EDB005EB048 /* ScrumTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA13BBC224F56EDB005EB048 /* ScrumTimer.swift */; };
@@ -67,6 +68,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2115459125E11AF000A28D17 /* ComposableArchitecture in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -116,22 +118,22 @@
 		AA8ACE8224F44E01007DA4D8 /* Scrumdinger */ = {
 			isa = PBXGroup;
 			children = (
-				AA8ACE8324F44E01007DA4D8 /* ScrumdingerApp.swift */,
-				AA8ACE8524F44E01007DA4D8 /* MeetingView.swift */,
+				AA8ACE8C24F44E03007DA4D8 /* Info.plist */,
+				AA65BF4824F4636E007E4A1B /* CardView.swift */,
+				AA65BF4C24F46C27007E4A1B /* DetailView.swift */,
+				AA13BBBE24F567AA005EB048 /* EditView.swift */,
+				AAD1604824F5BB640014DFC3 /* HistoryView.swift */,
 				AA5719D924F57DA3002316EB /* MeetingFooterView.swift */,
 				AA5719D724F57D59002316EB /* MeetingHeaderView.swift */,
 				AAD1604224F5A08F0014DFC3 /* MeetingTimerView.swift */,
-				AA65BF4824F4636E007E4A1B /* CardView.swift */,
-				AA65BF4A24F4671D007E4A1B /* ScrumsView.swift */,
-				AA65BF4C24F46C27007E4A1B /* DetailView.swift */,
-				AA13BBBE24F567AA005EB048 /* EditView.swift */,
+				AA8ACE8524F44E01007DA4D8 /* MeetingView.swift */,
+				AA8ACE8324F44E01007DA4D8 /* ScrumdingerApp.swift */,
 				AA13BBC024F56EA9005EB048 /* ScrumProgressViewStyle.swift */,
-				AAD1604824F5BB640014DFC3 /* HistoryView.swift */,
-				AA65BF4324F4604A007E4A1B /* Models */,
+				AA65BF4A24F4671D007E4A1B /* ScrumsView.swift */,
 				AA8ACE8724F44E03007DA4D8 /* Assets.xcassets */,
-				AA8ACE8C24F44E03007DA4D8 /* Info.plist */,
-				AA13BBC424F56F0E005EB048 /* Resources */,
+				AA65BF4324F4604A007E4A1B /* Models */,
 				AA8ACE8924F44E03007DA4D8 /* Preview Content */,
+				AA13BBC424F56F0E005EB048 /* Resources */,
 			);
 			path = Scrumdinger;
 			sourceTree = "<group>";
@@ -169,6 +171,9 @@
 			dependencies = (
 			);
 			name = Scrumdinger;
+			packageProductDependencies = (
+				2115459025E11AF000A28D17 /* ComposableArchitecture */,
+			);
 			productName = Scrumdinger;
 			productReference = AA8ACE8024F44E01007DA4D8 /* Scrumdinger.app */;
 			productType = "com.apple.product-type.application";
@@ -196,6 +201,9 @@
 				Base,
 			);
 			mainGroup = AA8ACE7724F44E01007DA4D8;
+			packageReferences = (
+				2115458F25E11AF000A28D17 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
+			);
 			productRefGroup = AA8ACE8124F44E01007DA4D8 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -430,6 +438,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2115458F25E11AF000A28D17 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.14.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2115459025E11AF000A28D17 /* ComposableArchitecture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2115458F25E11AF000A28D17 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = ComposableArchitecture;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AA8ACE7824F44E01007DA4D8 /* Project object */;
 }
