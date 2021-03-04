@@ -5,61 +5,84 @@
 import SwiftUI
 import ComposableArchitecture
 
-struct DetailViewState: Equatable {
-    var scrum: DailyScrum
+struct DetailViewState: Equatable, Identifiable {
+    var id: UUID { scrum.id }
     var isPresented = false
-    var editView = EditViewState(data: DailyScrum.Data())
+    var meetingState: MeetingState
+    var editViewState: EditViewState
+
+    init(meetingState: MeetingState) {
+        self.meetingState = meetingState
+        self.editViewState = EditViewState(data: meetingState.scrum.data)
+    }
+}
+
+extension DetailViewState {
+    var scrum: DailyScrum {
+        meetingState.scrum
+    }
 }
 
 enum DetailViewAction: Equatable {
-    case meeting(DailyScrum)
     case setIsPresented(Bool)
     case editTapped
     case editAction(EditViewAction)
     case cancelTapped
     case doneTapped(DailyScrum.Data)
+    case meetingAction(MeetingAction)
 }
 
-struct DetailViewEnvironment {}
+struct DetailViewEnvironment {
+    let mainQueue: AnySchedulerOf<DispatchQueue>
+    let meetingViewEnvironment: MeetingEnvironment
+}
 
 let detailViewReducer = Reducer<DetailViewState, DetailViewAction, DetailViewEnvironment>.combine(
-    editViewReducer.pullback(state: \DetailViewState.editView,
+    meetingViewReducer.pullback(state: \DetailViewState.meetingState,
+                                action: /DetailViewAction.meetingAction,
+                                environment: { $0.meetingViewEnvironment }),
+    editViewReducer.pullback(state: \DetailViewState.editViewState,
                              action: /DetailViewAction.editAction,
-                             environment: { _ in EditViewEnvironment() }),
+                             environment: { _ in }),
     Reducer { state, action, _ in
         switch action {
-        case .meeting(let scrum):
-            state.scrum = scrum
-            return .none
         case .setIsPresented(let isPresented):
             state.isPresented = isPresented
             return .none
+
         case .editTapped:
-            state.editView = EditViewState(data: state.scrum.data)
+            state.editViewState = EditViewState(data: state.scrum.data)
             return Effect(value: .setIsPresented(true))
+
         case .doneTapped(let data):
-            state.scrum.update(from: data)
+            state.meetingState.scrum.update(from: data)
             return Effect(value: .setIsPresented(false))
+
         case .cancelTapped:
             return Effect(value: .setIsPresented(false))
-        case .editAction:
+
+        case .editAction,
+             .meetingAction:
             return .none
         }
     }
 )
+
+let detailViewEnvironment: (AnySchedulerOf<DispatchQueue>) -> DetailViewEnvironment = { mainQueue in
+    DetailViewEnvironment(mainQueue: mainQueue,
+                          meetingViewEnvironment: meetingViewEnvironment(mainQueue))
+}
 
 struct DetailView: View {
 
     let store: Store<DetailViewState, DetailViewAction>
 
     var body: some View {
-        WithViewStore(self.store) { (viewStore: ViewStore<DetailViewState, DetailViewAction>) in
+        WithViewStore(store) { (viewStore: ViewStore<DetailViewState, DetailViewAction>) in
             List {
                 Section(header: Text("Meeting Info")) {
-                    NavigationLink(
-                        destination: MeetingView(scrum: viewStore.binding(
-                                                    get: \.scrum,
-                                                    send: DetailViewAction.meeting))) {
+                    NavigationLink(destination: MeetingView(store: store.scope(state: \.meetingState,
+                                                                               action: DetailViewAction.meetingAction))) {
                         Label("Start Meeting", systemImage: "timer")
                             .font(.headline)
                             .foregroundColor(.accentColor)
@@ -109,13 +132,13 @@ struct DetailView: View {
             .fullScreenCover(isPresented: viewStore.binding(get: \.isPresented,
                                                             send: DetailViewAction.setIsPresented)) {
                 NavigationView {
-                    EditView(store: self.store.scope(state: \.editView,
-                                                     action: DetailViewAction.editAction))
+                    EditView(store: store.scope(state: \.editViewState,
+                                                action: DetailViewAction.editAction))
                         .navigationTitle(viewStore.scrum.title)
                         .navigationBarItems(leading: Button("Cancel") {
                             viewStore.send(.cancelTapped)
                         }, trailing: Button("Done") {
-                            viewStore.send(.doneTapped(viewStore.editView.data))
+                            viewStore.send(.doneTapped(viewStore.editViewState.data))
                         })
                 }
             }
@@ -124,11 +147,12 @@ struct DetailView: View {
 }
 
 struct DetailView_Previews: PreviewProvider {
+
     static var previews: some View {
         NavigationView {
-            DetailView(store: Store<DetailViewState, DetailViewAction>(initialState: DetailViewState(scrum: DailyScrum.data[0]),
+            DetailView(store: Store<DetailViewState, DetailViewAction>(initialState: DetailViewState(meetingState: MeetingState(scrum: DailyScrum.data[0])),
                                                                        reducer: detailViewReducer,
-                                                                       environment: DetailViewEnvironment()))
+                                                                       environment: detailViewEnvironment(DispatchQueue.main.eraseToAnyScheduler())))
         }
     }
 }
