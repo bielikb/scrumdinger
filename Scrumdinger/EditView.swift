@@ -20,10 +20,7 @@ enum EditViewAction: Equatable {
     case setAttendee(String)
 }
 
-struct EditViewEnvironment {}
-
-let editViewReducer = Reducer<EditViewState, EditViewAction, EditViewEnvironment> { state, action, environment in
-
+let editViewReducer = Reducer<EditViewState, EditViewAction, Void> { state, action, environment in
     switch action {
     case .setTitle(let title):
         state.data.title = title
@@ -58,12 +55,8 @@ let editViewReducer = Reducer<EditViewState, EditViewAction, EditViewEnvironment
 struct EditView: View {
     let store: Store<EditViewState, EditViewAction>
 
-    init(store: Store<EditViewState, EditViewAction>) {
-        self.store = store
-    }
-
     var body: some View {
-        WithViewStore(self.store) { viewStore in
+        WithViewStore(store) { viewStore in
             List {
                 Section(header: Text("Meeting Info")) {
                     TextField("Title", text: viewStore.binding(
@@ -121,6 +114,6 @@ struct EditView_Previews: PreviewProvider {
         EditView(store: Store(initialState: EditViewState(newAttendee: "",
                                                           data: DailyScrum.Data()),
                               reducer: editViewReducer,
-                              environment: EditViewEnvironment()))
+                              environment: ()))
     }
 }
