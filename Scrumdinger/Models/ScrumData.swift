@@ -9,12 +9,13 @@ import ComposableArchitecture
 final class ScrumData {
 
     enum Error: Swift.Error, Equatable {
-        case couldntFindDocumentsDirectory
+        case couldntGetTheFileURL
         case failedToDecodeScrumData
         case couldntSaveScrums
+        case failedToEncodeScrumData
     }
 
-    let global: DispatchQueue
+    let global: AnySchedulerOf<DispatchQueue>
     let fileManager: FileManager
 
     private var documentsFolder: URL {
@@ -31,15 +32,18 @@ final class ScrumData {
         return documentsFolder.appendingPathComponent("scrums.data")
     }
 
-    init(global: DispatchQueue, fileManager: FileManager) {
+    init(global: AnySchedulerOf<DispatchQueue>, fileManager: FileManager) {
         self.global = global
         self.fileManager = fileManager
     }
 
     func load() -> Effect<[DailyScrum], Error> {
         Effect.run { [weak self] subscriber in
-            self?.global.async { [weak self] in
-                guard let outfile = self?.fileURL else { return }
+           self?.global.schedule { [weak self] in
+                guard let outfile = self?.fileURL else {
+                    subscriber.send(completion: .failure(.couldntGetTheFileURL))
+                    return
+                }
                 guard let data = try? Data(contentsOf: outfile) else {
                     #if DEBUG
                         subscriber.send(DailyScrum.data)
@@ -57,14 +61,17 @@ final class ScrumData {
             return AnyCancellable {}
         }
     }
-    func save(scrums: [DailyScrum]) -> Effect<Always, Error> {
+    func save(scrums: [DailyScrum]) -> Effect<Bool, Error> {
         Effect.run { [weak self] subscriber in
-            self?.global.async { [weak self] in
-                guard let data = try? JSONEncoder().encode(scrums) else { fatalError("Error encoding data") }
+            self?.global.schedule { [weak self] in
+                guard let data = try? JSONEncoder().encode(scrums) else {
+                    subscriber.send(completion: .failure(.failedToEncodeScrumData))
+                    return
+                }
                 do {
                     guard let file = self?.fileURL else { return }
                     try data.write(to: file)
-                    subscriber.send(.always)
+                    subscriber.send(true)
                 } catch {
                     subscriber.send(completion: .failure(.couldntSaveScrums))
                 }
