@@ -26,7 +26,7 @@ struct AppEnvironment {
     let scrumsViewEnvironment: ScrumsViewEnvironment
 }
 
-let reducer = Reducer<AppState, AppAction, AppEnvironment>.combine(
+let appReducer = Reducer<AppState, AppAction, AppEnvironment>.combine(
     scrumsReducer.pullback(state: \AppState.scrumsState,
                            action: /AppAction.updateScrumsState,
                            environment: \.scrumsViewEnvironment),
@@ -39,9 +39,10 @@ let reducer = Reducer<AppState, AppAction, AppEnvironment>.combine(
                 .map(AppAction.didLoadScrums)
             
         case let .didLoadScrums(.success(dailyScrums)):
-            let scrumStates = dailyScrums.map {
-                DetailViewState(meetingState: MeetingState(scrum: $0))
-            }
+            let scrumStates = dailyScrums
+                .map { MeetingState(scrum: $0) }
+                .map { DetailViewState(meetingState: $0) }
+
             state.scrumsState = ScrumsViewState(scrums: scrumStates)
             return .none
             
@@ -67,7 +68,8 @@ let appEnvironment: AppEnvironment = {
     let mainQueue: AnySchedulerOf<DispatchQueue> = DispatchQueue.main.eraseToAnyScheduler()
     return AppEnvironment(mainQueue: mainQueue,
                           scrumData: ScrumData(global: DispatchQueue.global().eraseToAnyScheduler(),
-                                               fileManager: FileManager.default),
+                                               fileManager: FileManager.default,
+                                               initialData: DailyScrum.data),
                           scrumsViewEnvironment: scrumsViewEnvironment(mainQueue))
 }()
 
@@ -76,9 +78,9 @@ struct ScrumdingerApp: App {
     
     @Environment(\.scenePhase) private var scenePhase
     
-    private let store: Store<AppState, AppAction> = {
+    var store: Store<AppState, AppAction> = {
         return Store(initialState: AppState(scrumsState: ScrumsViewState()),
-                     reducer: reducer,
+                     reducer: appReducer,
                      environment: appEnvironment)
     }()
     

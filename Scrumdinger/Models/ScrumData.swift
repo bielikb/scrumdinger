@@ -9,7 +9,7 @@ import ComposableArchitecture
 final class ScrumData {
 
     enum Error: Swift.Error, Equatable {
-        case couldntGetTheFileURL
+        case failedToLoadScrums
         case failedToDecodeScrumData
         case couldntSaveScrums
         case failedToEncodeScrumData
@@ -17,6 +17,7 @@ final class ScrumData {
 
     let global: AnySchedulerOf<DispatchQueue>
     let fileManager: FileManager
+    let initialData: [DailyScrum]
 
     private var documentsFolder: URL {
         do {
@@ -32,22 +33,24 @@ final class ScrumData {
         return documentsFolder.appendingPathComponent("scrums.data")
     }
 
-    init(global: AnySchedulerOf<DispatchQueue>, fileManager: FileManager) {
+    init(global: AnySchedulerOf<DispatchQueue>,
+         fileManager: FileManager,
+         initialData: [DailyScrum]) {
         self.global = global
         self.fileManager = fileManager
+        self.initialData = initialData
     }
 
     func load() -> Effect<[DailyScrum], Error> {
         Effect.run { [weak self] subscriber in
            self?.global.schedule { [weak self] in
-                guard let outfile = self?.fileURL else {
-                    subscriber.send(completion: .failure(.couldntGetTheFileURL))
+                guard let self = self else {
+                    subscriber.send(completion: .failure(.failedToLoadScrums))
                     return
                 }
-                guard let data = try? Data(contentsOf: outfile) else {
-                    #if DEBUG
-                        subscriber.send(DailyScrum.data)
-                    #endif
+                guard let data = try? Data(contentsOf: self.fileURL) else {
+                    subscriber.send(self.initialData)
+                    subscriber.send(completion: .finished)
                     return
                 }
                 guard let dailyScrums = try? JSONDecoder().decode([DailyScrum].self, from: data) else {
@@ -56,11 +59,13 @@ final class ScrumData {
                 }
 
                 subscriber.send(dailyScrums)
+                subscriber.send(completion: .finished)
             }
 
             return AnyCancellable {}
         }
     }
+
     func save(scrums: [DailyScrum]) -> Effect<Bool, Error> {
         Effect.run { [weak self] subscriber in
             self?.global.schedule { [weak self] in
